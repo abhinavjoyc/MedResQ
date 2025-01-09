@@ -1,45 +1,49 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, Alert } from "react-native";
-import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
+import MapView from 'react-native-maps';
+import Geolocation from '@react-native-community/geolocation'; // Import geolocation
 
-const HomeMap = ({ location, defaultLocation }) => {
-  const [currentLocation, setCurrentLocation] = useState(location || defaultLocation);
-  const [loading, setLoading] = useState(!location); // Set loading based on location availability
+const HomeMap = () => {
+  const [currentLocation, setCurrentLocation] = useState(null);
+  const [region, setRegion] = useState({
+    latitude: 0,
+    longitude: 0,
+    latitudeDelta: 0.01,
+    longitudeDelta: 0.01,
+  });
 
+  // Get the current location when the component mounts
   useEffect(() => {
-    if (location) {
-      setCurrentLocation(location);
-      setLoading(false);
-    } else {
-      setLoading(false); // If no location, stop loading
-    }
-  }, [location]);
-
-  if (loading) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
-  }
-
-  if (!currentLocation) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Unable to retrieve location.</Text>
-      </View>
+    Geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        // Update the location and region to the current location
+        setCurrentLocation({ latitude, longitude });
+        setRegion({
+          latitude,
+          longitude,
+          latitudeDelta: 0.01,  // Zoom level
+          longitudeDelta: 0.01, // Zoom level
+        });
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 20000,
+        maximumAge: 1000,
+      }
     );
-  }
+  }, []);
 
   return (
     <MapView
       style={{ width: '100%', height: '100%' }}
-      provider={PROVIDER_GOOGLE}
-      showsUserLocation={true}
-      initialRegion={{
-        latitude: currentLocation.latitude,
-        longitude: currentLocation.longitude,
-        latitudeDelta: 0.0222,
-        longitudeDelta: 0.0121,
-      }}
+      showsUserLocation={true} // Show the blue dot for user's location
+      region={currentLocation ? region : undefined} // Update region once the location is obtained
+      onRegionChangeComplete={(newRegion) => setRegion(newRegion)} // Optional: Update region on user interaction
     >
-      <Marker coordinate={currentLocation} title="You are here" />
+      {/* Marker removed */}
     </MapView>
   );
 };
