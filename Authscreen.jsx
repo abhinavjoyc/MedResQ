@@ -24,7 +24,7 @@ export default function AuthScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome</Text>
+      <Text style={styles.title}>MedResQ</Text>
       <Text style={styles.subtitle}>Please sign in or sign up</Text>
       
       <TextInput
@@ -74,10 +74,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   title: {
-    fontSize: 32,
+    fontSize: 50,
     fontWeight: 'bold',
     textAlign: 'center',
+    fontFamily: "sans-sheriff",
     marginBottom: 10,
+    color: 'red'
   },
   subtitle: {
     fontSize: 16,

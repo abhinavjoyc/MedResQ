@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Button, StyleSheet } from 'react-native';
+import { View, Text, Button, StyleSheet, ActivityIndicator } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import { useNavigation } from '@react-navigation/native';
@@ -11,10 +11,12 @@ const RouteMap = () => {
   const [origin, setOrigin] = useState(null);
   const [destination, setDestination] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true); // Added loading state
   const navigation = useNavigation();
 
   useEffect(() => {
     const fetchLocations = async () => {
+      setLoading(true); // Set loading to true before the fetch
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw new Error('Error fetching session: ' + sessionError.message);
@@ -49,6 +51,8 @@ const RouteMap = () => {
       } catch (err) {
         console.error(err);
         setError(err.message);
+      } finally {
+        setLoading(false); // Set loading to false after fetch completes
       }
     };
 
@@ -57,11 +61,9 @@ const RouteMap = () => {
 
   const handleNavigation = async () => {
     try {
-      // Step 1: Get the user ID
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session.user.id;
 
-      // Step 2: Update the driver's accidentid to NULL
       const { error: updateError } = await supabase
         .from('drivers')
         .update({ accidentid: null })
@@ -69,7 +71,6 @@ const RouteMap = () => {
 
       if (updateError) throw new Error('Error updating driver data: ' + updateError.message);
 
-      // Step 3: Navigate to Home
       navigation.navigate('Home');
     } catch (err) {
       console.error(err.message);
@@ -77,7 +78,7 @@ const RouteMap = () => {
   };
 
   if (error) return <View><Text>Error: {error}</Text></View>;
-  if (!origin || !destination) return <View><Text>Loading...</Text></View>;
+  if (loading) return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#0000ff" /></View>;
 
   return (
     <View style={styles.container}>
@@ -123,6 +124,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 8,
     padding: 10,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
